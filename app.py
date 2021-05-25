@@ -51,37 +51,35 @@ def precipitation():
     """Return the precipitation data for the last year"""
     
     session = Session(engine)
-    results = session.query().all() 
+    results = session.query(Measurement.date, Measurement.prcp, Measurement.station).\
+                filter(Measurement.date >='2016-08-23').\
+                order_by(Measurement.date).all()
+
+    prcp_data = []
+    for result in results:
+        prcp_dict = {result.date: result.prcp, 'Station': result.station}
+        prcp_data.append(prcp_dict)
+    return jsonify(prcp_data) 
     session.close()
-    # Calculate the date 1 year ago from last date in database
     
-    # Query for the date and precipitation for the last year
-    
-    # Dict with date as the key and prcp as the value
-   
-    
-    
-    return jsonify(precipitation)
-
-
 @app.route("/api/v1.0/stations")
 def stations():
     """Return a list of stations."""
-    
     session = Session(engine)
-    results = session.query().all() 
+    results = session.query(Station.name).all()
+    all_stations = list(np.ravel(results))
+    return jsonify(all_stations)
     session.close()
     
-    # Unravel results into a 1D array and convert to a list
-    some_variable_stations_list = list(np.ravel(results)) # check this function
-    return jsonify()
-
-
-@app.route("/api/v1.0/temperatureObservation")
+@app.route("/api/v1.0/tobs")
 def temp_monthly():
     """Return the temperature observations (tobs) for previous year."""
     session = Session(engine)
-    results = session.query().all() 
+    results = session.query(Measurement.date, Measurement.tobs, Measurement.station).\
+                filter(Measurement.date >= '2016-08-23').\
+                order_by(Measurement.date).all()
+
+    temp_data = []
     session.close()
 
     
