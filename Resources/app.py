@@ -1,11 +1,12 @@
 import datetime as dt
 import numpy as np
+import pandas as pd
 
-import sqlalchemy
+
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
-
+import sqlalchemy
 from flask import Flask, jsonify
 
 #################################################
@@ -51,7 +52,7 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/temp/start/end"
+        f"/api/v1.0/temp/2016-08-23/2017-08-23"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -89,17 +90,17 @@ def temp_monthly():
     session.close()
     temp_data = []
     for result in results:
-        temp_dict = {result.date: result.temp, 'Station': result.station}
+        temp_dict = {result.date: result.tobs, 'Station': result.station}
         temp_data.append(temp_dict)
     return jsonify(temp_data)
 
-
-def stats(start=None, end=None):
+@app.route("/api/v1.0/temp/<start>/<end>")
+def stats(start, end):
     """Return TMIN, TAVG, TMAX."""
     session = Session(engine)
-    results = session.query(func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).\
+    results = session.query(Measurement.date, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).\
                 filter(func.strftime("%Y-%m-%d", Measurement.date) >= start).\
-                filter(func.strftime("%Y-%m-%d", Measurement.date) >= end).\
+                filter(func.strftime("%Y-%m-%d", Measurement.date) <= end).\
                 group_by(Measurement.date).all()
     session.close()
 
