@@ -23,12 +23,22 @@ Base.prepare(engine, reflect=True)
 Measurement = Base.classes.measurement
 Station = Base.classes.station
 
-
+session = Session(engine)
 #################################################
 # Flask Setup
 #################################################
 app = Flask(__name__)
 
+recent_date = (session.query(Measurement.date).order_by(Measurement.date.desc()).first())
+recent_date = list(np.ravel(recent_date))[0]
+
+recent_date = dt.datetime.strptime(recent_date, '%Y-%m-%d')
+
+recent_year = int(dt.datetime.strftime(recent_date, '%Y'))
+recent_month = int(dt.datetime.strftime(recent_date, '%m'))
+recent_day = int(dt.datetime.strftime(recent_date, '%d'))
+
+year_earlier = dt.date(recent_year, recent_month, recent_day) - dt.timedelta(days=365)
 #################################################
 # Flask Routes
 #################################################
@@ -80,10 +90,11 @@ def temp_monthly():
                 order_by(Measurement.date).all()
 
     temp_data = []
+    for result in results:
+        temp_dict = {result.date: result.temp, 'Station': result.station}
+        temp_data.append(temp_dict)
+    return jsonify(temp_data)
     session.close()
-
-    
-    return jsonify()
 
 
 def stats(start=None, end=None):
