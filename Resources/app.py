@@ -52,6 +52,7 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
+        f"/api/v1.0/temp/2016-08-23<br/>"
         f"/api/v1.0/temp/2016-08-23/2017-08-23"
     )
 
@@ -94,8 +95,27 @@ def temp_monthly():
         temp_data.append(temp_dict)
     return jsonify(temp_data)
 
+@app.route("/api/v1.0/temp/<start>")
+def stats_start(start):
+    """Return TMIN, TAVG, TMAX."""
+    session = Session(engine)
+    results = session.query(Measurement.date, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).\
+                filter(func.strftime("%Y-%m-%d", Measurement.date) >= start).\
+                group_by(Measurement.date).all()
+    session.close()
+
+    dates = []
+    for result in results:
+        date_dict = {}
+        date_dict["Date"] = result[0]
+        date_dict["Lowest Temp"] = result[1]
+        date_dict["Highest Temp"] = result[2]
+        date_dict["Average Temp"] = result[3]
+        dates.append(date_dict)
+    return jsonify(dates)
+
 @app.route("/api/v1.0/temp/<start>/<end>")
-def stats(start, end):
+def stats_start_end(start, end):
     """Return TMIN, TAVG, TMAX."""
     session = Session(engine)
     results = session.query(Measurement.date, func.min(Measurement.tobs), func.max(Measurement.tobs), func.avg(Measurement.tobs)).\
